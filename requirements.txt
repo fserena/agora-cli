@@ -1,0 +1,10 @@
+click
+rdflib==4.2.1
+SPARQLWrapper
+pyld
+rdflib-jsonld
+shortuuid
+agora-py
+agora-wot
+agora-gw
+agora-graphql
