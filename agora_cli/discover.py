@@ -41,7 +41,7 @@ def show(obj, turtle):
 
 
 @discover.command()
-@click.option('--eco-query', required=True)
+@click.option('--query', required=True)
 @click.option('--arg', multiple=True)
 @click.option('--host', default='agora')
 @click.option('--port', default=80)

@@ -16,6 +16,8 @@
   limitations under the License.
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=#
 """
+import os
+import zipfile
 import json
 import logging
 
@@ -60,6 +62,23 @@ def show_thing(g, format):
     th_type = th_types.pop() if th_types else None
     ttl = serialize_graph(g, format, frame=th_type, skolem=False)
     click.echo(ttl)
+
+
+def compress(path, out):
+    def zipdir(ziph):
+        for root, dirs, files in os.walk(path):
+            for file in filter(lambda f: not f.endswith('.settings'), files):
+                ziph.write(os.path.join(root, file))
+
+    zipf = zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED)
+    zipdir(zipf)
+    zipf.close()
+
+
+def extract(file):
+    zipf = zipfile.ZipFile(file, 'r', zipfile.ZIP_DEFLATED)
+    zipf.extractall()
+    zipf.close()
 
 
 def jsonify(obj):

@@ -103,10 +103,11 @@ def gen_queue(status, stop_event, queue):
                     raise Exception(status['exception'].message)
 
 
-@cli.command()
+@cli.command('query')
 @click.argument('q')
 @click.option('--arg', multiple=True)
 @click.option('--incremental', is_flag=True, default=False)
+@click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
 @click.option('--cache-port')
@@ -116,8 +117,8 @@ def gen_queue(status, stop_event, queue):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def query(ctx, q, arg, incremental, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
-          port):
+def query(ctx, q, arg, incremental, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
+          fragment_cache, host, port):
     check_init(ctx)
 
     args = dict(map(lambda a: split_arg(a), arg))
@@ -135,10 +136,9 @@ def query(ctx, q, arg, incremental, cache_file, cache_host, cache_port, cache_db
     stop = Semaphore()
     queue = Queue()
 
-    click.echo('Discovering ecosystem...', nl=False)
     dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
-    click.echo('Done')
-    gen = dgw.query(q, incremental=incremental, stop_event=stop, scholar=fragment_cache, **args)
+    gen = dgw.query(q, incremental=incremental, stop_event=stop, scholar=fragment_cache, follow_cycles=not ignore_cycles,
+                    **args)
 
     request_status = {
         'completed': False,

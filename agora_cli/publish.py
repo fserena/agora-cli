@@ -19,23 +19,21 @@
 
 import click
 from agora import RedisCache
+from agora.server.fountain import build as fs
+from agora.server.fragment import build as frs
+from agora.server.planner import build as ps
+from agora.server.sparql import build as ss
 from agora_graphql.gql import GraphQLProcessor
 from agora_graphql.server import AgoraGraphQLView
-from agora_gw.server.app import Application
 from agora_graphql.server.app import Application as GQLApplication
+from agora_gw.server.app import Application
 from agora_gw.server.worker import number_of_workers
 from agora_wot.gateway import Gateway
 from flask import Flask
 from flask_cors import CORS
 
 from agora_cli.root import cli
-
-from agora.server.fountain import build as fs
-from agora.server.planner import build as ps
-from agora.server.sparql import build as ss
-from agora.server.fragment import build as frs
-
-from agora_cli.utils import check_init, split_arg
+from agora_cli.utils import check_init
 
 __author__ = 'Fernando Serena'
 
@@ -101,18 +99,20 @@ def publish_planner(ctx, port):
     server.run(host='0.0.0.0', port=port, threaded=True)
 
 
-def query_f(dgw, incremental, scholar):
+def query_f(dgw, incremental, scholar, ignore_cycles):
     def wrapper(*args, **kwargs):
         kwargs['incremental'] = incremental
         kwargs['scholar'] = scholar
+        kwargs['follow_cycles'] = not ignore_cycles
         return dgw.query(*args, **kwargs)
 
     return wrapper
 
 
 @publish.command('sparql')
-@click.argument('q')
+@click.option('--query', required=True)
 @click.option('--incremental', is_flag=True, default=False)
+@click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
 @click.option('--cache-port')
@@ -122,7 +122,8 @@ def query_f(dgw, incremental, scholar):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def publish_sparql(ctx, q, incremental, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache,
+def publish_sparql(ctx, query, incremental, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
+                   fragment_cache,
                    host,
                    port):
     check_init(ctx)
@@ -139,24 +140,26 @@ def publish_sparql(ctx, q, incremental, cache_file, cache_host, cache_port, cach
         cache = None
 
     click.echo('Discovering ecosystem...', nl=False)
-    dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
     click.echo('Done')
 
-    server = ss(ctx.obj['gw'].agora, query_function=query_f(dgw, incremental, fragment_cache))
+    server = ss(ctx.obj['gw'].agora, query_function=query_f(dgw, incremental, fragment_cache, ignore_cycles))
     server.run(host='0.0.0.0', port=port, threaded=True)
     click.echo()
 
 
-def fragment_f(dgw, scholar):
+def fragment_f(dgw, scholar, ignore_cycles):
     def wrapper(*args, **kwargs):
         kwargs['scholar'] = scholar
+        kwargs['follow_cycles'] = not ignore_cycles
         return dgw.fragment(*args, **kwargs)
 
     return wrapper
 
 
 @publish.command('fragment')
-@click.argument('q')
+@click.option('--query', required=True)
+@click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
 @click.option('--cache-port')
@@ -166,7 +169,8 @@ def fragment_f(dgw, scholar):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def publish_sparql(ctx, q, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
+def publish_fragment(ctx, query, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
+                   fragment_cache, host,
                    port):
     check_init(ctx)
 
@@ -181,18 +185,19 @@ def publish_sparql(ctx, q, cache_file, cache_host, cache_port, cache_db, resourc
     else:
         cache = None
 
-    click.echo('Discovering ecosystem...', nl=False)
-    dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
-    click.echo('Done')
+    click.echo('Preparing...', nl=False)
+    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    click.echo('Ready')
 
-    server = frs(ctx.obj['gw'].agora, fragment_function=fragment_f(dgw, fragment_cache))
+    server = frs(ctx.obj['gw'].agora, fragment_function=fragment_f(dgw, fragment_cache, ignore_cycles))
     server.run(host='0.0.0.0', port=port, threaded=True)
     click.echo()
 
 
 @publish.command('ui')
-@click.argument('q')
+@click.option('--query', required=True)
 @click.option('--incremental', is_flag=True, default=False)
+@click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
 @click.option('--cache-port')
@@ -202,7 +207,9 @@ def publish_sparql(ctx, q, cache_file, cache_host, cache_port, cache_db, resourc
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def publish_ui(ctx, q, incremental, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
+def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
+               fragment_cache,
+               host,
                port):
     check_init(ctx)
 
@@ -218,12 +225,12 @@ def publish_ui(ctx, q, incremental, cache_file, cache_host, cache_port, cache_db
         cache = None
 
     click.echo('Discovering ecosystem...', nl=False)
-    dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, server_name=host, port=80, base='.agora/store/fragments')
     click.echo('Done')
 
     server = fs(ctx.obj['gw'].agora.fountain)
-    frs(ctx.obj['gw'].agora, server=server, fragment_function=fragment_f(dgw, fragment_cache))
-    ss(ctx.obj['gw'].agora, server=server, query_function=query_f(dgw, incremental, fragment_cache))
+    frs(ctx.obj['gw'].agora, server=server, fragment_function=fragment_f(dgw, fragment_cache, ignore_cycles))
+    ss(ctx.obj['gw'].agora, server=server, query_function=query_f(dgw, incremental, fragment_cache, ignore_cycles))
     server.run(host='0.0.0.0', port=port, threaded=True)
     click.echo()
 

@@ -43,6 +43,7 @@ def gql(ctx):
 @click.argument('q')
 @click.option('--schema-file', type=click.Path(exists=True))
 # @click.option('--incremental', is_flag=True, default=False)
+@click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
 @click.option('--cache-port')
@@ -52,7 +53,7 @@ def gql(ctx):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def query(ctx, q, schema_file, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
+def query(ctx, q, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
           port):
     check_init(ctx)
 
@@ -70,6 +71,6 @@ def query(ctx, q, schema_file, cache_file, cache_host, cache_port, cache_db, res
 
     ctx.obj['gw'].data_cache = cache
     processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
-                                 port=port)
+                                 port=port, follow_cycles=not ignore_cycles)
     res = processor.query(q)
     click.echo(jsonify(res.to_dict()))

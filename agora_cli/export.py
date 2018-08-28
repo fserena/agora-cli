@@ -17,7 +17,29 @@
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=#
 """
 
+import click
+
+from agora_cli.root import cli
+from agora_cli.utils import check_init, compress, is_init, extract
+
 __author__ = 'Fernando Serena'
 
-from agora_cli import list, get, show, add, delete, compute, discover, query, publish, init, qgl, learn, export
-from agora_cli.root import cli
+
+@cli.command('export')
+@click.pass_context
+def export(ctx):
+    check_init(ctx)
+    compress('.agora', 'agora.zip')
+
+
+@cli.command('import')
+@click.pass_context
+@click.argument('file', type=click.Path(exists=True))
+def import_from_file(ctx, file):
+    if is_init():
+        click.echo('[FAIL] Agora is already initialized: ', nl=False)
+        ctx.abort()
+    extract(file)
+    if is_init():
+        click.echo('[ OK ] Agora was successfully imported')
+
