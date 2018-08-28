@@ -267,7 +267,7 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
 
     ctx.obj['gw'].data_cache = cache
     gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
-                                 port=80, follow_cycles=not ignore_cycles)
+                                 port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
 
     app.add_url_rule('/graphql',
                      view_func=AgoraGraphQLView.as_view('graphql', schema=gql_processor.schema,

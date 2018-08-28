@@ -71,6 +71,6 @@ def query(ctx, q, schema_file, ignore_cycles, cache_file, cache_host, cache_port
 
     ctx.obj['gw'].data_cache = cache
     processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
-                                 port=80, follow_cycles=not ignore_cycles)
+                                 port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
     res = processor.query(q)
     click.echo(jsonify(res.to_dict()))
