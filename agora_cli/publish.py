@@ -237,6 +237,7 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
 
 @publish.command('gql')
 @click.option('--schema-file')
+@click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
 @click.option('--cache-port')
@@ -246,7 +247,7 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def publish_gql(ctx, schema_file, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
+def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
                 port):
     check_init(ctx)
 
@@ -265,7 +266,8 @@ def publish_gql(ctx, schema_file, cache_file, cache_host, cache_port, cache_db, 
     CORS(app)
 
     ctx.obj['gw'].data_cache = cache
-    gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_file)
+    gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
+                                 port=80, follow_cycles=not ignore_cycles)
 
     app.add_url_rule('/graphql',
                      view_func=AgoraGraphQLView.as_view('graphql', schema=gql_processor.schema,
