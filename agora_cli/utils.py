@@ -104,6 +104,8 @@ def store_config(**kwargs):
                     "persist_mode": True,
                     "base": ".agora/store",
                     "path": "ted",
+                    "sparql_host": kwargs['repo_sparql_host'],
+                    "update_host": kwargs['repo_update_host'],
                     "cache": {
                         "file": None if remote_repo_cache else ".agora/store/ted/repo.db",
                         "host": kwargs['repo_cache_host'],
