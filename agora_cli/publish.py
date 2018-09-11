@@ -277,8 +277,8 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
 
     options = {
         'bind': '%s:%s' % ('0.0.0.0', str(port)),
-        'workers': number_of_workers(),
-        'threads': 1,
+        'workers': 1,
+        'threads': number_of_workers(),
         'workerconnections': 1000,
         'timeout': 4000,
         'workerclass': 'gthread',
