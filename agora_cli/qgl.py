@@ -58,10 +58,15 @@ def query(ctx, q, schema_file, ignore_cycles, cache_file, cache_host, cache_port
     check_init(ctx)
 
     q = q.replace("'", '"')
+    if cache_file:
+        path_parts = cache_file.split('/')
+        cache_base = '/'.join(cache_file.split('/')[:-1])
+        cache_file = path_parts[-1]
+
     if resource_cache or fragment_cache:
         remote_cache = all([cache_host, cache_port, cache_db])
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
-                           base='.agora/store',
+                           base='.agora/store' if not cache_file else cache_base,
                            path='',
                            redis_host=cache_host,
                            redis_db=cache_db,

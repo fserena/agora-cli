@@ -23,7 +23,7 @@ from agora.server.fountain import build as fs
 from agora.server.fragment import build as frs
 from agora.server.planner import build as ps
 from agora.server.sparql import build as ss
-from agora_graphql.gql import GraphQLProcessor, AgoraExecutor
+from agora_graphql.gql import GraphQLProcessor
 from agora_graphql.server import AgoraGraphQLView
 from agora_graphql.server.app import Application as GQLApplication
 from agora_gw.server.app import Application
@@ -128,10 +128,15 @@ def publish_sparql(ctx, query, incremental, ignore_cycles, cache_file, cache_hos
                    port):
     check_init(ctx)
 
+    if cache_file:
+        path_parts = cache_file.split('/')
+        cache_base = '/'.join(cache_file.split('/')[:-1])
+        cache_file = path_parts[-1]
+
     if resource_cache or fragment_cache:
         remote_cache = all([cache_host, cache_port, cache_db])
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
-                           base='.agora/store',
+                           base='.agora/store' if not cache_file else cache_base,
                            path='',
                            redis_host=cache_host,
                            redis_db=cache_db,
@@ -170,14 +175,19 @@ def fragment_f(dgw, scholar, ignore_cycles):
 @click.option('--port', default=80)
 @click.pass_context
 def publish_fragment(ctx, query, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
-                   fragment_cache, host,
-                   port):
+                     fragment_cache, host,
+                     port):
     check_init(ctx)
+
+    if cache_file:
+        path_parts = cache_file.split('/')
+        cache_base = '/'.join(cache_file.split('/')[:-1])
+        cache_file = path_parts[-1]
 
     if resource_cache or fragment_cache:
         remote_cache = all([cache_host, cache_port, cache_db])
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
-                           base='.agora/store',
+                           base='.agora/store' if not cache_file else cache_base,
                            path='',
                            redis_host=cache_host,
                            redis_db=cache_db,
@@ -213,10 +223,15 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
                port):
     check_init(ctx)
 
+    if cache_file:
+        path_parts = cache_file.split('/')
+        cache_base = '/'.join(cache_file.split('/')[:-1])
+        cache_file = path_parts[-1]
+
     if resource_cache or fragment_cache:
         remote_cache = all([cache_host, cache_port, cache_db])
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
-                           base='.agora/store',
+                           base='.agora/store' if not cache_file else cache_base,
                            path='',
                            redis_host=cache_host,
                            redis_db=cache_db,
@@ -247,14 +262,20 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
+def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
+                fragment_cache, host,
                 port):
     check_init(ctx)
+
+    if cache_file:
+        path_parts = cache_file.split('/')
+        cache_base = '/'.join(cache_file.split('/')[:-1])
+        cache_file = path_parts[-1]
 
     if resource_cache or fragment_cache:
         remote_cache = all([cache_host, cache_port, cache_db])
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
-                           base='.agora/store',
+                           base='.agora/store' if not cache_file else cache_base,
                            path='',
                            redis_host=cache_host,
                            redis_db=cache_db,
@@ -267,7 +288,7 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
 
     ctx.obj['gw'].data_cache = cache
     gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
-                                 port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
+                                     port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
 
     app.add_url_rule('/graphql',
                      view_func=AgoraGraphQLView.as_view('graphql', schema=gql_processor.schema,
