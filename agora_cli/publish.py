@@ -271,7 +271,7 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
 
     app.add_url_rule('/graphql',
                      view_func=AgoraGraphQLView.as_view('graphql', schema=gql_processor.schema,
-                                                        executor=AgoraExecutor(ctx.obj['gw']),
+                                                        executor=gql_processor.executor,
                                                         middleware=gql_processor.middleware,
                                                         graphiql=True))
 
