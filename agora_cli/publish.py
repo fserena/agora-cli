@@ -23,7 +23,7 @@ from agora.server.fountain import build as fs
 from agora.server.fragment import build as frs
 from agora.server.planner import build as ps
 from agora.server.sparql import build as ss
-from agora_graphql.gql import GraphQLProcessor
+from agora_graphql.gql import GraphQLProcessor, AgoraExecutor
 from agora_graphql.server import AgoraGraphQLView
 from agora_graphql.server.app import Application as GQLApplication
 from agora_gw.server.app import Application
@@ -271,7 +271,7 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
 
     app.add_url_rule('/graphql',
                      view_func=AgoraGraphQLView.as_view('graphql', schema=gql_processor.schema,
-                                                        executor=gql_processor.executor,
+                                                        executor=AgoraExecutor(ctx.obj['gw']),
                                                         middleware=gql_processor.middleware,
                                                         graphiql=True))
 
