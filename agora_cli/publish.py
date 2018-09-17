@@ -259,12 +259,13 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
 @click.option('--cache-db')
 @click.option('--resource-cache', is_flag=True, default=False)
 @click.option('--fragment-cache', is_flag=True, default=False)
+@click.option('--age-gql-cache', type=int, default=300)
+@click.option('--len-gql-cache', type=int, default=1000000)
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
 def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
-                fragment_cache, host,
-                port):
+                fragment_cache, age_gql_cache, len_gql_cache, host, port):
     check_init(ctx)
 
     if cache_file:
@@ -288,7 +289,8 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
 
     ctx.obj['gw'].data_cache = cache
     gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
-                                     port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
+                                     port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments',
+                                     data_gw_cache={'max_age_seconds': age_gql_cache, 'max_len': len_gql_cache})
 
     app.add_url_rule('/graphql',
                      view_func=AgoraGraphQLView.as_view('graphql', schema=gql_processor.schema,
