@@ -45,7 +45,7 @@ def show_extension(ctx, name):
 @click.pass_context
 def show_prefixes(ctx):
     gw = ctx.obj['gw']
-    print jsonify(gw.agora.fountain.prefixes)
+    click.echo(jsonify(gw.agora.fountain.prefixes))
 
 
 @show.command('type')
@@ -53,7 +53,7 @@ def show_prefixes(ctx):
 @click.argument('name')
 def show_prefixes(ctx, name):
     gw = ctx.obj['gw']
-    print jsonify(gw.agora.fountain.get_type(name))
+    click.echo(jsonify(gw.agora.fountain.get_type(name)))
 
 
 @show.command('property')
@@ -61,7 +61,7 @@ def show_prefixes(ctx, name):
 @click.argument('name')
 def show_prefixes(ctx, name):
     gw = ctx.obj['gw']
-    print jsonify(gw.agora.fountain.get_property(name))
+    click.echo(jsonify(gw.agora.fountain.get_property(name)))
 
 
 @show.command('paths')
@@ -70,9 +70,8 @@ def show_prefixes(ctx, name):
 @click.argument('dest')
 def show_paths(ctx, source, dest):
     gw = ctx.obj['gw']
-
-    print jsonify(
-        gw.agora.fountain.get_paths(dest, force_seed=[('<{}-uri>'.format(source.lower()).replace(':', '-'), source)]))
+    click.echo(jsonify(
+        gw.agora.fountain.get_paths(dest, force_seed=[('<{}-uri>'.format(source.lower()).replace(':', '-'), source)])))
 
 
 @show.command('ted')
