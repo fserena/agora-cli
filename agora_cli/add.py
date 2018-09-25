@@ -25,7 +25,7 @@ from agora_wot.gateway import Gateway
 from rdflib import Graph, URIRef, RDF
 
 from agora_cli.root import cli
-from agora_cli.utils import show_ted, check_init, store_host_replacements
+from agora_cli.utils import show_ted, check_init, store_host_replacements, jsonify
 
 __author__ = 'Fernando Serena'
 
@@ -164,3 +164,14 @@ def add_host(ctx):
 def add_host_replacement(ctx, base, replace):
     ctx.obj['repls'][base] = replace
     store_host_replacements(ctx.obj['repls'])
+
+
+@add.command('prefix')
+@click.argument('prefix')
+@click.argument('ns')
+@click.pass_context
+def add_prefix(ctx, prefix, ns):
+    gw = ctx.obj['gw']
+    gw.agora.fountain.add_prefixes({prefix: ns})
+    print jsonify(gw.agora.fountain.prefixes)
+
