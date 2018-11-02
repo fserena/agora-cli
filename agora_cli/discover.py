@@ -18,7 +18,6 @@
 """
 
 import click
-from agora_wot.gateway import Gateway
 
 from agora_cli.root import cli
 from agora_cli.show import show_ted
@@ -46,10 +45,7 @@ def show(obj, turtle):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def seeds(ctx, eco_query, arg, host, port):
+def seeds(ctx, query, arg, host, port):
     args = dict(map(lambda a: split_arg(a), arg))
-    ted = ctx.obj['gw'].discover(eco_query, lazy=False)
-    dgw = Gateway(ctx.obj['gw'].agora, ted, cache=None, port=port, server_name=host)
-    seeds = dgw.proxy.instantiate_seeds(**args)
-    seed_uris = set(reduce(lambda x, y: x + y, seeds.values(), []))
+    seed_uris = ctx.obj['gw'].seeds(query, host=host, port=port, **args)
     click.echo(jsonify(list(seed_uris)))

@@ -26,8 +26,7 @@ import click
 from agora import RedisCache
 from agora.engine.plan.agp import extend_uri
 from agora.engine.utils import Semaphore
-from agora_graphql.gql.data import DataGraph
-from agora_wot.gateway import Gateway
+from agora_wot.gateway import DataGateway
 from rdflib import URIRef, RDF, Graph
 
 from agora_cli.root import cli
@@ -52,7 +51,7 @@ def get(ctx):
 def get_resource(ctx, uri, host, port, turtle, raw):
     gw = ctx.obj['gw']
     ted = gw.ted
-    dgw = Gateway(gw.agora, ted, cache=None, port=port, server_name=host)
+    dgw = DataGateway(gw.agora, ted, cache=None, port=port, server_name=host)
     g, headers = dgw.loader(uri)
 
     uri_ref = URIRef(uri)
@@ -69,7 +68,8 @@ def get_resource(ctx, uri, host, port, turtle, raw):
         ag.__iadd__(g)
     else:
         known_types_n3 = [t.n3(ag.namespace_manager) for t in known_types]
-        known_props = reduce(lambda x, y: x.union(set(gw.agora.fountain.get_type(y)['properties'])), known_types_n3, set())
+        known_props = reduce(lambda x, y: x.union(set(gw.agora.fountain.get_type(y)['properties'])), known_types_n3,
+                             set())
         known_props_uri = set([extend_uri(p, prefixes) for p in known_props])
         known_refs = reduce(lambda x, y: x.union(set(gw.agora.fountain.get_type(y)['refs'])), known_types_n3, set())
         known_refs_uri = set([extend_uri(p, prefixes) for p in known_refs])
@@ -142,7 +142,8 @@ def gen_queue(status, stop_event, queue):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def fragment(ctx, q, arg, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host, port):
+def fragment(ctx, q, arg, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache,
+             host, port):
     args = dict(map(lambda a: split_arg(a), arg))
     if cache_file:
         path_parts = cache_file.split('/')

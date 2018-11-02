@@ -38,7 +38,7 @@ __author__ = 'Fernando Serena'
 @click.pass_context
 def init(ctx, **kwargs):
     if is_init():
-        click.echo("[FAIL] Couldn't init Agora: ", nl=False, err=True)
+        click.echo("[FAIL] Agora is already initialized: ", nl=False, err=True)
         ctx.abort()
 
     init_base()

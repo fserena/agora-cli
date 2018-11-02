@@ -18,15 +18,11 @@
 """
 
 import click
-from agora.engine.plan.agp import extend_uri
-from agora_wot.blocks.endpoint import Endpoint
-from agora_wot.blocks.td import TD, Mapping, AccessMapping, ResourceTransform
 from agora_wot.blocks.utils import describe
-from agora_wot.gateway import Gateway
-from rdflib import Graph, URIRef, RDF, BNode
+from rdflib import Graph, BNode
 
 from agora_cli.root import cli
-from agora_cli.utils import show_ted, check_init, store_host_replacements
+from agora_cli.utils import show_ted, check_init
 
 __author__ = 'Fernando Serena'
 
@@ -55,7 +51,7 @@ def learn_extension(ctx, name, file):
 def learn_descriptions(ctx, file, turtle):
     with open(file, 'r') as f:
         g = Graph().parse(f, format='turtle')
-    ted = ctx.obj['gw'].add_description(g)
+    ted = ctx.obj['gw'].learn_descriptions(g)
     show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
 
 
@@ -100,5 +96,5 @@ def learn_descriptions(ctx, id, file, turtle):
 
         rg.add((s, p, o))
 
-    ted = ctx.obj['gw'].add_description(rg)
+    ted = ctx.obj['gw'].learn_descriptions(rg)
     show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')

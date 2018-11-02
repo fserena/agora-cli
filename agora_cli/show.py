@@ -18,7 +18,7 @@
 """
 
 import click
-from agora_wot.blocks.td import TD
+from agora_gw.gateway import NotFoundError, GatewayError
 
 from agora_cli.root import cli
 from agora_cli.utils import jsonify, show_ted, show_td, show_thing, check_init, load_config, error
@@ -37,8 +37,11 @@ def show(ctx):
 @click.argument('name')
 def show_extension(ctx, name):
     gw = ctx.obj['gw']
-    g = gw.get_extension(name)
-    click.echo(g.serialize(format='turtle'))
+    try:
+        g = gw.get_extension(name)
+        click.echo(g.serialize(format='turtle'))
+    except NotFoundError:
+        error(u"The extension '{}' doesn't exist".format(name))
 
 
 @show.command('prefixes')
@@ -51,17 +54,23 @@ def show_prefixes(ctx):
 @show.command('type')
 @click.pass_context
 @click.argument('name')
-def show_prefixes(ctx, name):
+def show_type(ctx, name):
     gw = ctx.obj['gw']
-    click.echo(jsonify(gw.agora.fountain.get_type(name)))
+    try:
+        click.echo(jsonify(gw.get_type(name)))
+    except NotFoundError:
+        error('There is no known type called "{}"'.format(name))
 
 
 @show.command('property')
 @click.pass_context
 @click.argument('name')
-def show_prefixes(ctx, name):
+def show_property(ctx, name):
     gw = ctx.obj['gw']
-    click.echo(jsonify(gw.agora.fountain.get_property(name)))
+    try:
+        click.echo(jsonify(gw.get_property(name)))
+    except NotFoundError:
+        error('There is no known property called "{}"'.format(name))
 
 
 @show.command('paths')
@@ -70,16 +79,23 @@ def show_prefixes(ctx, name):
 @click.argument('dest')
 def show_paths(ctx, source, dest):
     gw = ctx.obj['gw']
-    click.echo(jsonify(
-        gw.agora.fountain.get_paths(dest, force_seed=[('<{}-uri>'.format(source.lower()).replace(':', '-'), source)])))
+    try:
+        click.echo(jsonify(
+            gw.agora.fountain.get_paths(dest,
+                                        force_seed=[('<{}-uri>'.format(source.lower()).replace(':', '-'), source)])))
+    except TypeError:
+        error('Source and/or destination are unknown')
 
 
 @show.command('ted')
 @click.pass_context
 @click.option('--turtle', default=False, is_flag=True)
 def _show_ted(ctx, turtle):
-    ted = ctx.obj['gw'].ted
-    show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
+    try:
+        ted = ctx.obj['gw'].ted
+        show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
+    except GatewayError as e:
+        error(e.message)
 
 
 @show.command('td')
@@ -90,8 +106,8 @@ def _show_td(ctx, id, turtle):
     try:
         td = ctx.obj['gw'].get_description(id)
         show_td(td, format='text/turtle' if turtle else 'application/ld+json')
-    except Exception as e:
-        error(u'{},{}'.format(type(e), e.message))
+    except NotFoundError:
+        error('There is no known TD identified as {}'.format(id))
 
 
 @show.command('thing')
@@ -99,19 +115,18 @@ def _show_td(ctx, id, turtle):
 @click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
 def _show_thing(ctx, id, turtle):
-    g = ctx.obj['gw'].get_thing(id).to_graph()
-    show_thing(g, format='text/turtle' if turtle else 'application/ld+json')
+    try:
+        g = ctx.obj['gw'].get_thing(id).to_graph()
+        show_thing(g, format='text/turtle' if turtle else 'application/ld+json')
+    except NotFoundError:
+        error('There is no known thing identified as {}'.format(id))
 
 
-@show.command('ted-args')
-@click.pass_obj
-def show_ted_args(obj):
-    td_roots = list(filter(lambda r: isinstance(r, TD), obj['ted'].ecosystem.roots))
-    res = {}
-    for td in td_roots:
-        res[td.id] = list(obj['ted'].ecosystem.root_vars(td))
-
-    click.echo(jsonify(res))
+@show.command('args')
+@click.pass_context
+def show_args(ctx):
+    args = ctx.obj['gw'].args
+    click.echo(jsonify(args))
 
 
 @show.command('config')

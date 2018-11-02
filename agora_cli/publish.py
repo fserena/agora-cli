@@ -28,7 +28,7 @@ from agora_graphql.server import AgoraGraphQLView
 from agora_graphql.server.app import Application as GQLApplication
 from agora_gw.server.app import Application
 from agora_gw.server.worker import number_of_workers
-from agora_wot.gateway import Gateway
+from agora_wot.gateway import DataGateway
 from flask import Flask
 from flask_cors import CORS
 
@@ -56,7 +56,7 @@ def publish_ecosystem(ctx, query, host, port, cache_file):
     else:
         cache = None
     ted = ctx.obj['gw'].discover(query, lazy=False)
-    dgw = Gateway(ctx.obj['gw'].agora, ted, cache=cache, port=port, server_name=host)
+    dgw = DataGateway(ctx.obj['gw'].agora, ted, cache=cache, port=port, server_name=host)
     dgw.server.gw.config['ENV'] = 'development'
 
     dgw.server.gw.run(host='0.0.0.0', port=port, threaded=True)

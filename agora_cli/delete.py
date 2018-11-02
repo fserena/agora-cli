@@ -17,16 +17,13 @@
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=#
 """
 
-import json
-
 import click
 from agora import RedisCache
 from agora.engine.utils.graph import get_triple_store
-from agora_gw.data.repository import CORE
-from rdflib import Graph, BNode, RDF, Literal
+from agora_gw.gateway import NotFoundError
 
 from agora_cli.root import cli
-from agora_cli.utils import check_init, store_host_replacements, show_ted
+from agora_cli.utils import check_init, store_host_replacements, show_ted, error
 
 __author__ = 'Fernando Serena'
 
@@ -140,15 +137,11 @@ def delete_mapping(ctx, id, mid, turtle):
 
 @delete.command('td')
 @click.argument('id')
-@click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
-def delete_description(ctx, id, turtle):
+def delete_description(ctx, id):
     gw = ctx.obj['gw']
-
-    td = gw.get_description(id)
-    if not td:
-        raise AttributeError('Unknown description: {}'.format(id))
-
-    ctx.obj['gw'].delete_description(id)
-    #show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
-    click.echo(td.id)
+    try:
+        gw.delete_description(id)
+        click.echo(id)
+    except NotFoundError:
+        error(u'There is no thing description called "{}"'.format(id))

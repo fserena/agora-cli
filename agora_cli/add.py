@@ -18,14 +18,10 @@
 """
 
 import click
-from agora.engine.plan.agp import extend_uri
-from agora_wot.blocks.endpoint import Endpoint
-from agora_wot.blocks.td import TD, Mapping, AccessMapping, ResourceTransform
-from agora_wot.gateway import Gateway
-from rdflib import Graph, URIRef, RDF
+from agora_gw.gateway import GatewayError, ConflictError
 
 from agora_cli.root import cli
-from agora_cli.utils import show_ted, check_init, store_host_replacements, jsonify
+from agora_cli.utils import check_init, store_host_replacements, jsonify, error, show_thing
 
 __author__ = 'Fernando Serena'
 
@@ -36,36 +32,20 @@ def add(ctx):
     check_init(ctx)
 
 
-@add.command('thing')
+@add.command('resource')
 @click.argument('uri')
 @click.option('--type', multiple=True)
 @click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
-def add_thing(ctx, uri, type, turtle):
+def add_resource(ctx, uri, type, turtle):
     gw = ctx.obj['gw']
-    agora = gw.agora
-    if not all([t in agora.fountain.types for t in type]):
-        raise AttributeError('Unknown type')
-
-    g = Graph()
-    prefixes = agora.fountain.prefixes
-
-    uri_ref = URIRef(uri)
-    if not type:
-        ted = gw.ted
-        dgw = Gateway(gw.agora, ted, cache=None)
-        rg, headers = dgw.loader(uri)
-
-        type_uris = set([extend_uri(t, prefixes) for t in agora.fountain.types])
-
-        resource_types = set(rg.objects(uri_ref, RDF.type))
-        type = tuple(set.intersection(type_uris, resource_types))
-
-    for t in type:
-        g.add((uri_ref, RDF.type, URIRef(extend_uri(t, prefixes))))
-
-    ted = ctx.obj['gw'].add_description(g)
-    show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
+    try:
+        r = gw.add_resource(uri, type)
+        show_thing(r.to_graph(), format='text/turtle' if turtle else 'application/ld+json')
+    except ConflictError:
+        error('The seed URI "{}" is already added'.format(uri))
+    except GatewayError as e:
+        error(e.message)
 
 
 @add.command('td')
@@ -75,42 +55,22 @@ def add_thing(ctx, uri, type, turtle):
 @click.pass_context
 def add_td(ctx, id, type, turtle):
     gw = ctx.obj['gw']
-    agora = gw.agora
-    if not all([t in agora.fountain.types for t in type]):
-        raise AttributeError('Unknown type')
-
-    prefixes = agora.fountain.prefixes
-    type_uris = [extend_uri(t, prefixes) for t in type]
-    td = TD.from_types(types=type_uris, id=id)
-    g = td.to_graph(th_nodes={})
-
-    ted = ctx.obj['gw'].add_description(g)
-    show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
+    try:
+        td = gw.add_description(id, type)
+        show_thing(td.to_graph(), format='text/turtle' if turtle else 'application/ld+json')
+    except ConflictError:
+        error('A TD called "{}" is already added'.format(id))
+    except GatewayError as e:
+        error(e.message)
 
 
 @add.command('am')
 @click.argument('id')
 @click.argument('link')
-@click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
-def add_access_mapping(ctx, id, link, turtle):
+def add_access_mapping(ctx, id, link):
     gw = ctx.obj['gw']
-
-    td = gw.get_description(id)
-    if not td:
-        raise AttributeError('Unknown description: {}'.format(id))
-
-    endpoint_hrefs = map(lambda e: u'{}'.format(e.href), td.endpoints)
-    if link in endpoint_hrefs:
-        raise AttributeError('Link already mapped')
-
-    e = Endpoint(href=link)
-    am = AccessMapping(e)
-    td.add_access_mapping(am)
-    g = td.to_graph(th_nodes={})
-
-    ted = ctx.obj['gw'].add_description(g)
-    show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
+    am = gw.add_access_mapping(id, link)
     click.echo(am.id)
 
 
@@ -122,32 +82,10 @@ def add_access_mapping(ctx, id, link, turtle):
 @click.option('--jsonpath')
 @click.option('--root', default=False, is_flag=True)
 @click.option('--transformed-by')
-@click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
-def add_mapping(ctx, id, amid, predicate, key, jsonpath, root, transformed_by, turtle):
+def add_mapping(ctx, id, amid, predicate, key, jsonpath, root, transformed_by):
     gw = ctx.obj['gw']
-
-    td = gw.get_description(id)
-    if not td:
-        raise AttributeError('Unknown description: {}'.format(id))
-
-    transform_td = None
-    if transformed_by:
-        transform_td = gw.get_description(transformed_by)
-
-    target_am = [am for am in td.access_mappings if str(am.id) == amid or am.endpoint.href.toPython() == amid]
-    if not target_am:
-        raise AttributeError('Unknown access mapping')
-
-    target_am = target_am.pop()
-
-    m = Mapping(key=key, predicate=URIRef(extend_uri(predicate, gw.agora.fountain.prefixes)), root=root, path=jsonpath,
-                transform=ResourceTransform(transform_td) if transform_td else None)
-    target_am.mappings.add(m)
-    g = td.to_graph(th_nodes={})
-
-    ted = ctx.obj['gw'].add_description(g)
-    show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
+    m = gw.add_mapping(id, amid, predicate, key, jsonpath, root, transformed_by)
     click.echo(m.id)
 
 
@@ -174,4 +112,3 @@ def add_prefix(ctx, prefix, ns):
     gw = ctx.obj['gw']
     gw.agora.fountain.add_prefixes({prefix: ns})
     print jsonify(gw.agora.fountain.prefixes)
-
