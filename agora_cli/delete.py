@@ -20,7 +20,7 @@
 import click
 from agora import RedisCache
 from agora.engine.utils.graph import get_triple_store
-from agora_gw.gateway import NotFoundError
+from agora_gw.gateway import NotFoundError, GatewayError
 
 from agora_cli.root import cli
 from agora_cli.utils import check_init, store_host_replacements, show_ted, error
@@ -81,26 +81,17 @@ def delete_cache(ctx, cache_file, cache_host, cache_port, cache_db):
 @delete.command('am')
 @click.argument('id')
 @click.argument('amid')
-@click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
-def delete_access_mapping(ctx, id, amid, turtle):
+def delete_access_mapping(ctx, id, amid):
     gw = ctx.obj['gw']
 
-    td = gw.get_description(id)
-    if not td:
-        raise AttributeError('Unknown description: {}'.format(id))
-
-    target_am = [am for am in td.access_mappings if str(am.id) == amid or am.endpoint.href.toPython() == amid]
-    if not target_am:
-        raise AttributeError('Unknown access mapping')
-
-    target_am = target_am.pop()
-    td.remove_access_mapping(target_am)
-    g = td.to_graph(th_nodes={})
-
-    ted = ctx.obj['gw'].add_description(g)
-    show_ted(ted, format='text/turtle' if turtle else 'application/ld+json')
-    click.echo(target_am.id)
+    try:
+        gw.delete_access_mapping(id, amid)
+        click.echo(amid)
+    except NotFoundError as e:
+        error(u'There is no entity called "{}"'.format(e.message))
+    except GatewayError as e:
+        error(e.message)
 
 
 @delete.command('mapping')
@@ -145,3 +136,5 @@ def delete_description(ctx, id):
         click.echo(id)
     except NotFoundError:
         error(u'There is no thing description called "{}"'.format(id))
+    except GatewayError as e:
+        error(e.message)

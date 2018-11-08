@@ -18,7 +18,7 @@
 """
 
 import click
-from agora_wot.blocks.utils import describe
+from agora_wot.utils import describe
 from rdflib import Graph, BNode
 
 from agora_cli.root import cli

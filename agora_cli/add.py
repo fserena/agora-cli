@@ -18,7 +18,7 @@
 """
 
 import click
-from agora_gw.gateway import GatewayError, ConflictError
+from agora_gw.gateway import GatewayError, ConflictError, NotFoundError
 
 from agora_cli.root import cli
 from agora_cli.utils import check_init, store_host_replacements, jsonify, error, show_thing
@@ -70,8 +70,15 @@ def add_td(ctx, id, type, turtle):
 @click.pass_context
 def add_access_mapping(ctx, id, link):
     gw = ctx.obj['gw']
-    am = gw.add_access_mapping(id, link)
-    click.echo(am.id)
+    try:
+        am = gw.add_access_mapping(id, link)
+        click.echo(am.id)
+    except NotFoundError:
+        error('There is not TD called {}'.format(id))
+    except ConflictError as e:
+        error('Conflict with {}'.format(e.message))
+    except GatewayError as e:
+        error(e.message)
 
 
 @add.command('mapping')
@@ -85,8 +92,15 @@ def add_access_mapping(ctx, id, link):
 @click.pass_context
 def add_mapping(ctx, id, amid, predicate, key, jsonpath, root, transformed_by):
     gw = ctx.obj['gw']
-    m = gw.add_mapping(id, amid, predicate, key, jsonpath, root, transformed_by)
-    click.echo(m.id)
+    try:
+        m = gw.add_mapping(id, amid, predicate, key, jsonpath, root, transformed_by)
+        click.echo(m.id)
+    except NotFoundError as e:
+        error('The entity {} does not exist'.format(e.message))
+    except ConflictError as e:
+        error('Conflict with {}'.format(e.message))
+    except GatewayError as e:
+        error(e.message)
 
 
 @add.group('host')
