@@ -18,6 +18,7 @@
 """
 
 import click
+from agora_wot.gateway import DataGateway
 
 from agora_cli.root import cli
 from agora_cli.show import show_ted
@@ -47,5 +48,9 @@ def show(obj, turtle):
 @click.pass_context
 def seeds(ctx, query, arg, host, port):
     args = dict(map(lambda a: split_arg(a), arg))
-    seed_uris = ctx.obj['gw'].seeds(query, host=host, port=port, **args)
+    gw = ctx.obj['gw']
+
+    ted = gw.discover(query, lazy=False)
+    dgw = DataGateway(gw.agora, ted, cache=None, port=port, server_name=host)
+    seed_uris = dgw.seeds(**args)
     click.echo(jsonify(list(seed_uris)))
