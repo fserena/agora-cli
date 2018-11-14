@@ -42,5 +42,5 @@ def cli(ctx, debug):
             setup_logging(logging.DEBUG)
 
         gw = Gateway(**config)
-        ctx.call_on_close(lambda: Agora.close())
+        ctx.call_on_close(lambda: gw.close())
         ctx.obj = {'gw': gw, 'config': config, 'repls': load_host_replacements()}
