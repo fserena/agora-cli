@@ -138,14 +138,14 @@ def publish_sparql(ctx, query, incremental, ignore_cycles, cache_file, cache_hos
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
                            base='.agora/store' if not cache_file else cache_base,
                            path='',
-                           redis_host=cache_host,
+                           redis_host=cache_host or host,
                            redis_db=cache_db,
-                           redis_port=cache_port)
+                           redis_port=cache_port or port)
     else:
         cache = None
 
     click.echo('Discovering ecosystem...', nl=False)
-    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, host=host, port=port, base='.agora/store/fragments')
     click.echo('Done')
 
     server = ss(ctx.obj['gw'].agora, query_function=query_f(dgw, incremental, fragment_cache, ignore_cycles))
@@ -189,14 +189,14 @@ def publish_fragment(ctx, query, ignore_cycles, cache_file, cache_host, cache_po
         cache = RedisCache(redis_file=None if remote_cache else (cache_file or 'data.db'),
                            base='.agora/store' if not cache_file else cache_base,
                            path='',
-                           redis_host=cache_host,
+                           redis_host=cache_host or host,
                            redis_db=cache_db,
-                           redis_port=cache_port)
+                           redis_port=cache_port or port)
     else:
         cache = None
 
     click.echo('Preparing...', nl=False)
-    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, host=host, port=port, base='.agora/store/fragments')
     click.echo('Ready')
 
     server = frs(ctx.obj['gw'].agora, fragment_function=fragment_f(dgw, fragment_cache, ignore_cycles))
