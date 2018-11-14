@@ -16,17 +16,16 @@
   limitations under the License.
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=#
 """
-import os
-import zipfile
 import json
 import logging
+import os
+import os.path as path
+import zipfile
 
 import click
 from agora_gw.data.repository import CORE
 from agora_gw.ecosystem.serialize import serialize_graph
 from rdflib import URIRef, RDF
-import os
-import os.path as path
 
 __author__ = 'Fernando Serena'
 
@@ -107,7 +106,7 @@ def store_config(**kwargs):
                     "sparql_host": kwargs['repo_sparql_host'],
                     "update_host": kwargs['repo_update_host'],
                     "cache": {
-                        "file": None if remote_repo_cache else ".agora/repo.db",
+                        "file": None if remote_repo_cache else ".agora/ted.db",
                         "host": kwargs['repo_cache_host'],
                         "port": kwargs['repo_cache_port'],
                         "db": kwargs['repo_cache_db']
