@@ -39,7 +39,8 @@ def compute(ctx):
 def search_plan(ctx, query, arg):
     args = dict(map(lambda a: split_arg(a), arg))
     gw = ctx.obj['gw']
-    res = gw.fragment(query, **args)
+    dgw = gw.data(query)
+    res = dgw.fragment(query, **args)
     plan = res['plan']
     click.echo(plan.serialize(format='turtle'))
 
