@@ -38,10 +38,15 @@ def close(gw):
 
 @click.group()
 @click.option('--debug', is_flag=True, default=False)
+@click.option('--gw-host')
+@click.option('--gw-port')
 @click.version_option()
 @click.pass_context
-def cli(ctx, debug):
-    config = load_config()
+def cli(ctx, debug, gw_host, gw_port):
+    if gw_host and gw_port:
+        config = {'host': gw_host, 'port': gw_port}
+    else:
+        config = load_config()
     if config is not None:
         if debug:
             setup_logging(logging.DEBUG)
