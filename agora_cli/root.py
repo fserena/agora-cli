@@ -31,6 +31,11 @@ mute_logger('rdflib')
 mute_logger('agora')
 
 
+def close(gw):
+    gw.close()
+    Agora.close()
+
+
 @click.group()
 @click.option('--debug', is_flag=True, default=False)
 @click.version_option()
@@ -42,5 +47,5 @@ def cli(ctx, debug):
             setup_logging(logging.DEBUG)
 
         gw = Gateway(**config)
-        ctx.call_on_close(lambda: gw.close())
+        ctx.call_on_close(lambda: close(gw))
         ctx.obj = {'gw': gw, 'config': config, 'repls': load_host_replacements()}
