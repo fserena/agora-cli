@@ -163,16 +163,18 @@ def fragment(ctx, q, arg, ignore_cycles, cache_file, cache_host, cache_port, cac
     stop = Semaphore()
     queue = Queue()
 
-    dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    gw = ctx.obj['gw']
+    with gw:
+        dgw = gw.data(q, cache=cache, lazy=False, host=host, port=port, base='.agora/store/fragments')
 
-    gen = dgw.fragment(q, stop_event=stop, scholar=fragment_cache, follow_cycles=not ignore_cycles, **args)
-    request_status = {
-        'completed': False,
-        'exception': None
-    }
-    stream_th = Thread(target=gen_thread, args=(request_status, queue, gen))
-    stream_th.daemon = False
-    stream_th.start()
+        gen = dgw.fragment(q, stop_event=stop, scholar=fragment_cache, follow_cycles=not ignore_cycles, **args)
+        request_status = {
+            'completed': False,
+            'exception': None
+        }
+        stream_th = Thread(target=gen_thread, args=(request_status, queue, gen))
+        stream_th.daemon = False
+        stream_th.start()
 
-    for chunk in gen_queue(request_status, stop, queue):
-        click.echo(chunk, nl=False)
+        for chunk in gen_queue(request_status, stop, queue):
+            click.echo(chunk, nl=False)

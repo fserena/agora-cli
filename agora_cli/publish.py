@@ -240,7 +240,7 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
         cache = None
 
     click.echo('Discovering ecosystem...', nl=False)
-    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, server_name=host, port=80, base='.agora/store/fragments')
+    dgw = ctx.obj['gw'].data(query, cache=cache, lazy=False, host=host, port=80, base='.agora/store/fragments')
     click.echo('Done')
 
     server = fs(ctx.obj['gw'].agora.fountain)
@@ -288,7 +288,7 @@ def publish_gql(ctx, schema_file, ignore_cycles, cache_file, cache_host, cache_p
     CORS(app)
 
     ctx.obj['gw'].data_cache = cache
-    gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, server_name=host,
+    gql_processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, host=host,
                                      port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments',
                                      data_gw_cache={'max_age_seconds': age_gql_cache, 'max_len': len_gql_cache})
 
