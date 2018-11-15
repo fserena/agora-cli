@@ -164,8 +164,8 @@ def fragment(ctx, q, arg, ignore_cycles, cache_file, cache_host, cache_port, cac
     queue = Queue()
 
     gw = ctx.obj['gw']
-    with gw:
-        dgw = gw.data(q, cache=cache, lazy=False, host=host, port=port, base='.agora/store/fragments')
+    dgw = gw.data(q, cache=cache, lazy=False, host=host, port=port, base='.agora/store/fragments')
+    with dgw:
 
         gen = dgw.fragment(q, stop_event=stop, scholar=fragment_cache, follow_cycles=not ignore_cycles, **args)
         request_status = {

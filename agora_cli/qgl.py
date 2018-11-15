@@ -16,19 +16,13 @@
   limitations under the License.
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=#
 """
-import json
-from Queue import Empty, Queue
-from datetime import datetime
-from threading import Thread
 
 import click
 from agora import RedisCache
-from agora.engine.utils import Semaphore
-from rdflib import URIRef, BNode
+from agora_graphql.gql import GraphQLProcessor
 
 from agora_cli.root import cli
-from agora_cli.utils import split_arg, check_init, jsonify
-from agora_graphql.gql import GraphQLProcessor
+from agora_cli.utils import check_init, jsonify
 
 __author__ = 'Fernando Serena'
 
@@ -42,7 +36,6 @@ def gql(ctx):
 @gql.command()
 @click.argument('q')
 @click.option('--schema-file', type=click.Path(exists=True))
-# @click.option('--incremental', is_flag=True, default=False)
 @click.option('--ignore-cycles', is_flag=True, default=False)
 @click.option('--cache-file')
 @click.option('--cache-host')
@@ -53,8 +46,8 @@ def gql(ctx):
 @click.option('--host', default='agora')
 @click.option('--port', default=80)
 @click.pass_context
-def query(ctx, q, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache, fragment_cache, host,
-          port):
+def query(ctx, q, schema_file, ignore_cycles, cache_file, cache_host, cache_port, cache_db, resource_cache,
+          fragment_cache, host, port):
     check_init(ctx)
 
     q = q.replace("'", '"')
@@ -76,6 +69,6 @@ def query(ctx, q, schema_file, ignore_cycles, cache_file, cache_host, cache_port
 
     ctx.obj['gw'].data_cache = cache
     processor = GraphQLProcessor(ctx.obj['gw'], schema_path=schema_file, scholar=fragment_cache, host=host,
-                                 port=80, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
+                                 port=port, follow_cycles=not ignore_cycles, base='.agora/store/fragments')
     res = processor.query(q)
     click.echo(jsonify(res.to_dict()))
