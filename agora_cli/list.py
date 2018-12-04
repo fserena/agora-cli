@@ -38,6 +38,20 @@ def list_extensions(ctx):
     click.echo(jsonify(gw.extensions))
 
 
+@list.command('resources')
+@click.pass_context
+def list_resources(ctx):
+    gw = ctx.obj['gw']
+    click.echo(jsonify(map(lambda r: r.node, gw.resources)))
+
+
+@list.command('enrichments')
+@click.pass_context
+def list_resources(ctx):
+    gw = ctx.obj['gw']
+    click.echo(jsonify(map(lambda r: r.node, gw.enrichments)))
+
+
 @list.command('types')
 @click.pass_context
 def list_types(ctx):

@@ -138,3 +138,31 @@ def delete_description(ctx, id):
         error(u'There is no thing description called "{}"'.format(id))
     except GatewayError as e:
         error(e.message)
+
+
+@delete.command('resource')
+@click.argument('id')
+@click.pass_context
+def delete_resource(ctx, id):
+    gw = ctx.obj['gw']
+    try:
+        gw.delete_resource(id)
+        click.echo(id)
+    except NotFoundError:
+        error(u'There is no resource called "{}"'.format(id))
+    except GatewayError as e:
+        error(e.message)
+
+
+@delete.command('enrichment')
+@click.argument('id')
+@click.pass_context
+def delete_enrichment(ctx, id):
+    gw = ctx.obj['gw']
+    try:
+        gw.delete_enrichment(id)
+        click.echo(id)
+    except NotFoundError:
+        error(u'There is no enrichment called "{}"'.format(id))
+    except GatewayError as e:
+        error(e.message)

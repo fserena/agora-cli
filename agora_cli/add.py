@@ -50,7 +50,7 @@ def add_resource(ctx, uri, type, turtle):
 
 @add.command('td')
 @click.argument('id')
-@click.option('--type', multiple=True)
+@click.option('--type', multiple=True, required=True)
 @click.option('--turtle', default=False, is_flag=True)
 @click.pass_context
 def add_td(ctx, id, type, turtle):
@@ -60,6 +60,25 @@ def add_td(ctx, id, type, turtle):
         show_thing(td.to_graph(), format='text/turtle' if turtle else 'application/ld+json')
     except ConflictError:
         error('A TD called "{}" is already added'.format(id))
+    except GatewayError as e:
+        error(e.message)
+
+
+@add.command('enrichment')
+@click.argument('id')
+@click.argument('td')
+@click.option('--type', required=True)
+@click.option('--replace', default=False, is_flag=True)
+@click.pass_context
+def add_enrichment(ctx, id, td, type, replace):
+    gw = ctx.obj['gw']
+    try:
+        e = gw.add_enrichment(id, type, td, replace=replace)
+        click.echo(e.id)
+    except NotFoundError:
+        error('There is no TD called {}'.format(td))
+    except ConflictError:
+        error('An enrichment between the TD "{}" and the given types is already defined'.format(td))
     except GatewayError as e:
         error(e.message)
 
@@ -74,7 +93,7 @@ def add_access_mapping(ctx, id, link):
         am = gw.add_access_mapping(id, link)
         click.echo(am.id)
     except NotFoundError:
-        error('There is not TD called {}'.format(id))
+        error('There is no TD called {}'.format(id))
     except ConflictError as e:
         error('Conflict with {}'.format(e.message))
     except GatewayError as e:

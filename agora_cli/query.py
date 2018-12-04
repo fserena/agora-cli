@@ -141,7 +141,7 @@ def query(ctx, q, arg, incremental, ignore_cycles, cache_file, cache_host, cache
     stop = Semaphore()
     queue = Queue()
 
-    dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, server_name=host, port=port, base='.agora/store/fragments')
+    dgw = ctx.obj['gw'].data(q, cache=cache, lazy=False, host=host, port=port, base='.agora/store/fragments')
     gen = dgw.query(q, incremental=incremental, stop_event=stop, scholar=fragment_cache, follow_cycles=not ignore_cycles,
                     **args)
 

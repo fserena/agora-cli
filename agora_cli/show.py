@@ -110,6 +110,30 @@ def _show_td(ctx, id, turtle):
         error('There is no known TD identified as {}'.format(id))
 
 
+@show.command('resource')
+@click.argument('id', type=unicode)
+@click.option('--turtle', default=False, is_flag=True)
+@click.pass_context
+def _show_resource(ctx, id, turtle):
+    try:
+        g = ctx.obj['gw'].get_resource(id).to_graph()
+        show_thing(g, format='text/turtle' if turtle else 'application/ld+json')
+    except NotFoundError:
+        error('There is no known resource identified as {}'.format(id))
+
+
+@show.command('enrichment')
+@click.argument('id', type=unicode)
+@click.option('--turtle', default=False, is_flag=True)
+@click.pass_context
+def _show_enrichment(ctx, id, turtle):
+    try:
+        g = ctx.obj['gw'].get_enrichment(id).to_graph()
+        show_thing(g, format='text/turtle' if turtle else 'application/ld+json')
+    except NotFoundError:
+        error('There is no known enrichment identified as {}'.format(id))
+
+
 @show.command('thing')
 @click.argument('id', type=unicode)
 @click.option('--turtle', default=False, is_flag=True)
