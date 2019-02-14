@@ -41,7 +41,7 @@ def learn_extension(ctx, name, file):
     gw = ctx.obj['gw']
     with open(file, 'r') as f:
         g = Graph().parse(f, format='turtle')
-    gw.add_extension(name, g)
+    gw.learn_extension(name, g)
 
 
 @learn.command('descriptions')
