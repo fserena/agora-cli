@@ -39,7 +39,7 @@ def delete(ctx):
 @click.argument('name')
 def delete_extension(ctx, name):
     gw = ctx.obj['gw']
-    gw.delete_extension(name)
+    gw.forget_extension(name)
 
 
 @delete.group('host')
