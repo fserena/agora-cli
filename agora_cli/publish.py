@@ -59,6 +59,7 @@ def publish_ecosystem(ctx, query, host, port, cache_file):
     dgw = DataGateway(ctx.obj['gw'].agora, ted, cache=cache, port=port, server_name=host)
     dgw.server.gw.config['ENV'] = 'development'
 
+    CORS(dgw.server.gw)
     dgw.server.gw.run(host='0.0.0.0', port=port, threaded=True)
 
 
@@ -87,6 +88,7 @@ def publish_gateway(ctx, port):
 def publish_fountain(ctx, port):
     fountain = ctx.obj['gw'].agora.fountain
     server = fs(fountain)
+    CORS(server)
     server.run(host='0.0.0.0', port=port, threaded=True)
 
 
@@ -96,6 +98,7 @@ def publish_fountain(ctx, port):
 def publish_planner(ctx, port):
     planner = ctx.obj['gw'].agora.planner
     server = ps(planner)
+    CORS(server)
     server.run(host='0.0.0.0', port=port, threaded=True)
 
 
@@ -149,6 +152,7 @@ def publish_sparql(ctx, query, incremental, ignore_cycles, cache_file, cache_hos
     click.echo('Done')
 
     server = ss(ctx.obj['gw'].agora, query_function=query_f(dgw, incremental, fragment_cache, ignore_cycles))
+    CORS(server)
     server.run(host='0.0.0.0', port=port, threaded=True)
     click.echo()
 
@@ -200,6 +204,7 @@ def publish_fragment(ctx, query, ignore_cycles, cache_file, cache_host, cache_po
     click.echo('Ready')
 
     server = frs(ctx.obj['gw'].agora, fragment_function=fragment_f(dgw, fragment_cache, ignore_cycles))
+    CORS(server)
     server.run(host='0.0.0.0', port=port, threaded=True)
     click.echo()
 
@@ -246,6 +251,7 @@ def publish_ui(ctx, query, incremental, ignore_cycles, cache_file, cache_host, c
     server = fs(ctx.obj['gw'].agora.fountain)
     frs(ctx.obj['gw'].agora, server=server, fragment_function=fragment_f(dgw, fragment_cache, ignore_cycles))
     ss(ctx.obj['gw'].agora, server=server, query_function=query_f(dgw, incremental, fragment_cache, ignore_cycles))
+    CORS(server)
     server.run(host='0.0.0.0', port=port, threaded=True)
     click.echo()
 
